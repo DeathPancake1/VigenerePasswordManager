@@ -2,6 +2,8 @@
 #include <stdlib.h>
 #include <time.h>
 #include <string.h>
+#include <sodium.h>
+#include <ctype.h>
 
 typedef struct{
     unsigned int year,day,month,hour,minute;
@@ -13,7 +15,8 @@ typedef struct{
 }Log;
 
 Log *content;
-int numRecords=0;
+int numRecords=0,m=0;
+char letters[]={"abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789 "};
 
 int makeDigit(char *s){
     int i, j, l,n;
@@ -28,8 +31,14 @@ int makeDigit(char *s){
     n=atoi(t);
     return n;
 }
+int mod(int a, int b)
+{
+    int r = a % b;
+    return r < 0 ? r + b : r;
+}
 
 void Load(){
+    m=strlen(letters);
     FILE *f=fopen("Manager.txt","r");
     char buffer[300];
     while(fgets(buffer,sizeof(buffer),f)){
@@ -70,38 +79,65 @@ void Load(){
     fclose(f);
     }
 }
-char *Encrypt(char *key,char *password){
+
+void Encrypt(char *key,char *password){
     int l1,l2,i=0,j=0;
     l1=strlen(key);
     l2=strlen(password);
-    char *encryptedPass=calloc(l2,sizeof(char));
+    int passwordInt[l2],keyInt[l1];
+    for(int l=0;l<l2;l++){
+        for(int k=0;k<m;k++){
+            if(password[l]==letters[k]){
+                passwordInt[l]=k;
+            }
+        }
+    }
+    for(int l=0;l<l1;l++){
+        for(int k=0;k<m;k++){
+            if(key[l]==letters[k]){
+                keyInt[l]=k;
+            }
+        }
+    }
     while(i<l2){
         if(j>=l1){
             j=0;
         }
-        char x=(password[i]+key[j])%126;
-        encryptedPass[i]=x;
+        int x=mod((passwordInt[i]+keyInt[j]),m);
+        password[i]=letters[x];
         i++;
         j++;
     }
-    return encryptedPass;
 }
 
-char *Decrypt(char *key,char *password){
+void Decrypt(char *key,char *password){
     int l1,l2,i=0,j=0;
     l1=strlen(key);
     l2=strlen(password);
-    char *decryptedPass=calloc(l2,sizeof(char));
+    int passwordInt[l2],keyInt[l1];
+    for(int l=0;l<l2;l++){
+        for(int k=0;k<m;k++){
+            if(password[l]==letters[k]){
+                passwordInt[l]=k;
+            }
+        }
+    }
+    for(int l=0;l<l1;l++){
+        for(int k=0;k<m;k++){
+            if(key[l]==letters[k]){
+                keyInt[l]=k;
+            }
+        }
+    }
     while(i<l2){
         if(j>=l1){
             j=0;
         }
-        char x=(password[i]-key[j]);
-        decryptedPass[i]=x+126;
+        int x=mod((passwordInt[i]-keyInt[j]),m);
+        password[i]=letters[x];
         i++;
         j++;
     }
-    return decryptedPass;
 }
 void Add(){
     time_t t ;
@@ -109,16 +145,40 @@ void Add(){
     char MY_TIME[50];
     time( &t );
     char website[100],ID[100],password[100],key[100];
-    unsigned int year,day,month,hour,minute;
+    uint32_t myInt[16];
+    int i;
+    unsigned int year,day,month,hour,minute,choice;
     printf("Enter the website name: ");
     scanf("%s",website);
     printf("Enter the ID: ");
     scanf("%s",ID);
-    printf("Enter the password: ");
-    scanf("%s",password);
+    printf("Do you want to insert a password or have a password generated for you?\n1)Enter password\n2)Generate password\n");
+    scanf("%d",&choice);
+    switch(choice){
+        case 1:
+            printf("Enter the password: ");
+            scanf("%s",password);
+            break;
+        case 2:
+            if (sodium_init() == -1) {
+                return;
+            }
+            for(i=0;i<16;i++){
+                myInt[i] = randombytes_uniform(64);
+            }
+            for(i=0;i<16;i++){
+                password[i]=letters[myInt[i]];
+            }
+            password[i]='\0';
+            printf("Your password is %s\n",password);
+            break;
+        default:
+            printf("Enter a valid choice\n");
+            return;
+    }
     printf("What is the key you want to use(you have to remember it and keep it secret, you can reuse it): ");
     scanf("%s",key);
-    strcpy(password,Encrypt(key,password));
+    Encrypt(key,password);
     tmp=localtime(&t);
     strftime(MY_TIME,sizeof(MY_TIME),"%x-%H:%M",tmp);
     char *tok=strtok(MY_TIME,"-:/");
@@ -152,9 +212,44 @@ void Add(){
     content[numRecords-1].dateTime.minute=minute;
 }
 
+void Search(){
+    char key[100];
+    printf("what is the key you used to decrypt the password?\n");
+    scanf("%s",key);
+    printf("Do you want to search by website or ID?\n1)Website\n2)ID\n");
+    int choice,f=0;
+    char query[100],decrypted[100];
+    scanf("%d",&choice);
+    switch(choice){
+        case 1:
+            printf("Enter the website name: ");
+            scanf("%s",query);
+            for(int i=0;i<numRecords;i++){
+                if(strcmp(content[i].website,query)==0){
+                    printf("%s %s %d/%d/%d-%0d:%0d\n",content[i].website,content[i].ID,content[i].dateTime.day,content[i].dateTime.month,content[i].dateTime.year,content[i].dateTime.hour,content[i].dateTime.minute);
+                    strcpy(decrypted,content[i].password);
+                    Decrypt(key,decrypted);
+                    printf("The password is:'%s'\n",decrypted);
+                    f=1;
+                }
+            }
+            if(f==0){
+                printf("Unable to find %s in the file.\n",query);
+            }
+            break;
+        case 2:
+            printf("Enter the ID: ");
+            scanf("%s",query);
+            break;
+        default:
+            printf("Enter a valid choice\n");
+            break;
+    }
+}
+
 int main()
 {
     Load();
-    Add();
+    Search();
     return 0;
 }
