@@ -48,10 +48,10 @@ void Load(){
     content=(Log *)calloc(numRecords,sizeof(Log));
     for(int i=0;i<numRecords;i++){
         fgets(buffer,sizeof(buffer),f);
-        char *tok=strtok(buffer,",-/:");
+        char *tok=strtok(buffer,",/-:");
         strcpy(content[i].website,tok);
         for(int j=0;j<7;j++){
-            tok=strtok(NULL,",-/:");
+            tok=strtok(NULL,",/:-");
             switch(j){
             case 0:
                 strcpy(content[i].ID,tok);
@@ -76,8 +76,8 @@ void Load(){
                 break;
             }
         }
-    fclose(f);
     }
+    fclose(f);
 }
 
 void Encrypt(char *key,char *password){
@@ -257,10 +257,26 @@ void Save(){
     fclose(f);
 }
 
+void Quit(){
+    printf("Are you sure you want to quit?\n1)Yes\n2)No\n");
+    int choice;
+    scanf("%d",&choice);
+    switch(choice){
+        case 1:
+            exit(0);
+            break;
+        case 2:
+            return;
+            break;
+        default:
+            printf("Enter a valid choice");
+            Quit();
+    }
+}
+
 int main()
 {
     Load();
-    Add();
-    Save();
+    Quit();
     return 0;
 }
