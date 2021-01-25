@@ -16,7 +16,7 @@ typedef struct{
 
 Log *content;
 int numRecords=0,m=0;
-char letters[]={"abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789 "};
+char letters[]={"abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789 !@#$%"};
 
 int makeDigit(char *s){
     int i, j, l,n;
@@ -164,7 +164,7 @@ void Add(){
                 return;
             }
             for(i=0;i<16;i++){
-                myInt[i] = randombytes_uniform(64);
+                myInt[i] = randombytes_uniform(m);
             }
             for(i=0;i<16;i++){
                 password[i]=letters[myInt[i]];
@@ -247,9 +247,20 @@ void Search(){
     }
 }
 
+void Save(){
+    FILE *f=fopen("Manager.txt","w");
+    char buffer[100];
+    for(int i=0;i<numRecords;i++){
+        sprintf(buffer,"%s,%s,%s,%d/%d/%d-%00d:%00d\n",content[i].website,content[i].ID,content[i].password,content[i].dateTime.day,content[i].dateTime.month,content[i].dateTime.year,content[i].dateTime.hour,content[i].dateTime.minute);
+        fputs(buffer,f);
+    }
+    fclose(f);
+}
+
 int main()
 {
     Load();
-    Search();
+    Add();
+    Save();
     return 0;
 }
