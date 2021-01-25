@@ -226,7 +226,7 @@ void Search(){
             scanf("%s",query);
             for(int i=0;i<numRecords;i++){
                 if(strcmp(content[i].website,query)==0){
-                    printf("%s %s %d/%d/%d-%0d:%0d\n",content[i].website,content[i].ID,content[i].dateTime.day,content[i].dateTime.month,content[i].dateTime.year,content[i].dateTime.hour,content[i].dateTime.minute);
+                    printf("Website:%s ID:%s Date/Time:%d/%d/%d-%00d:%00d\n",content[i].website,content[i].ID,content[i].dateTime.day,content[i].dateTime.month,content[i].dateTime.year,content[i].dateTime.hour,content[i].dateTime.minute);
                     strcpy(decrypted,content[i].password);
                     Decrypt(key,decrypted);
                     printf("The password is:'%s'\n",decrypted);
@@ -274,9 +274,17 @@ void Quit(){
     }
 }
 
+void ShowAll(){
+    printf("-----------------All Entries-----------------\n");
+    for(int i=0;i<numRecords;i++){
+        printf("Website:%s ID:%s Date/Time:%d/%d/%d-%00d:%00d\n",content[i].website,content[i].ID,content[i].dateTime.day,content[i].dateTime.month,content[i].dateTime.year,content[i].dateTime.hour,content[i].dateTime.minute);
+    }
+}
+
 int main()
 {
     Load();
+    ShowAll();
     Quit();
     return 0;
 }
