@@ -352,10 +352,36 @@ void Modify(){
     content[index].dateTime.minute=minute;
 }
 
+void Delete(){
+    char query[100],decrypted[100];;
+    printf("Enter the website name or the ID of the entry you want to delete: ");
+    scanf("%s",query);
+    int f=0,index;
+    for(int i=0;i<numRecords;i++){
+        if(strcmp(content[i].website,query)==0||strcmp(content[i].ID,query)==0){
+            index=i;
+            f=1;
+        }
+    }
+    if(f==0){
+        printf("Unable to find %s in the file.\n",query);
+        return;
+    }
+    else{
+        for(int i=0,j=0;i<numRecords;i++){
+            if(i!=index){
+                content[j]=content[i];
+                j++;
+            }
+        }
+    }
+    numRecords--;
+    content=(Log *)realloc(content,numRecords*sizeof(Log));
+}
 int main()
 {
     Load();
-    Modify();
+    Delete();
     ShowAll();
     Quit();
     return 0;
