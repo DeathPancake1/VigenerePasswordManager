@@ -1,2 +1,11 @@
 
 vcpkg/
+bin/Debug/Password Manager.exe
+bin/Debug/Password Manager.exe
+Password Manager.layout
+Password Manager.cbp
+obj/Debug/modifyFunctions.o
+obj/Debug/menu.o
+obj/Debug/main.o
+obj/Debug/helpFunctions.o
+obj/Debug/encrypt.o
